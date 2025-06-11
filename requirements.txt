@@ -1,1 +1,7 @@
 numpy
+xarray
+osmnx
+rasterio
+geopandas
+leafmap
+localtileserver
