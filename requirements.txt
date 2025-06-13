@@ -5,3 +5,5 @@ rasterio
 geopandas
 leafmap
 localtileserver
+geemap
+earthengine-api
