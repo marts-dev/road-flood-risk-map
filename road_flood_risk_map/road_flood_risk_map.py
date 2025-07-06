@@ -1,6 +1,7 @@
 """Main module."""
 import geemap
 import ee
+import whitebox_tools as wbt
 
 class RoadFloodRiskMap(geemap.Map):
     """A class to represent a road flood risk map."""
@@ -63,6 +64,34 @@ class RoadFloodRiskMap(geemap.Map):
                 print(f"Error exporting image: {e}")
 
         return sentinel1.mean().clip(region_of_interest)
+
+    def perform_hydrological_analysis(self, input_dem_file: str, output_file_name: str):
+        """
+        Perform a hydrological analysis on the region of interest. If `output_file_name` is provided, the results will be saved to a file.
+
+        Args:
+            input_dem_file (str): The path to the input DEM file.
+            output_file_name (str): The name of the output file to save the results. If None, the results will not be saved to a file.
+
+        Returns:
+            image: The results of the hydrological analysis.
+        """
+        # Smooth the DEM(Optional depending on the input DEM quality)
+        wbt.feature_preserving_smooth(input_dem_file, output_file_name+'_smoothed.tif', filter_size=3)
+
+        # Generate Hillshade from DEM
+        wbt.hillshade(input_dem_file, output_file_name+'_hillshade.tif', azimuth=315, altitude=45)
+
+        # Fill depressions
+        wbt.fill_depressions(input_dem_file, output_file_name+'_filled.tif')
+        # or Breach depression
+        wbt.breach_depressions(input_dem_file, output_file_name+'_breached.tif')
+
+        # Delineate flow direction
+        wbt.d8_pointer(input_dem_file, output_file_name+'_flow_direction.tif')
+
+        # Calculate flow accumulation
+        wbt.d8_flow_accumulation(output_file_name+'_flow_direction.tif', output_file_name+'_flow_accumulation.tif')
 
     def get_risk_level(self, location):
         """
