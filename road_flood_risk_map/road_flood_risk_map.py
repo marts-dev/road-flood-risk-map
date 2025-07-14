@@ -1,12 +1,13 @@
 """Main module."""
 import geemap
 import ee
-import whitebox_tools as wbt
+import os
+from whitebox_workflows import WbEnvironment
 
 class RoadFloodRiskMap(geemap.Map):
     """A class to represent a road flood risk map."""
 
-    def __init__(self, center= [40, -100], zoom= 4, height= "600px", add_google_map= False):
+    def __init__(self, center= [40, -100], zoom= 4, height= "600px", add_google_map= False, verbose= False):
         """
         Initialize the RoadFloodRiskMap with map data.
 
@@ -15,9 +16,13 @@ class RoadFloodRiskMap(geemap.Map):
             zoom (int): The initial zoom level of the map. Default is 4.
             height (str): The height of the map in CSS units. Default is "600px".
             add_google_map (bool): Whether to add Google Maps basemap. Default is False.
+            verbose (bool): Whether to print verbose output. Default is False.
         """
         geemap.ee_initialize()  # Initialize Earth Engine
         super().__init__(center=center, zoom=zoom, height=height, add_google_map=add_google_map)
+        self.wbe = WbEnvironment()
+        self.wbe.verbose = verbose
+        self.wbe.working_directory = os.getcwd()  # Set the working directory to the current directory
 
     def retrieve_alos_palsar_data_clip(self, region_of_interest: ee.Geometry, output_file_name: str | None=None, scale: int=30):
         """
@@ -55,9 +60,9 @@ class RoadFloodRiskMap(geemap.Map):
             image: The Sentinel-1 data clipped to the region of interest.
         """
         # Placeholder for actual data retrieval logic
-        sentinel1 = ee.ImageCollection('COPERNICUS/S1_GRD').filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VH')).filter(ee.Filter.date('2024-01-01', '2024-12-31')).select('VH')
+        sentinel1 = ee.ImageCollection('COPERNICUS/S1_GRD').filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VH')).filter(ee.Filter.date('2024-01-01', '2024-12-31')).filter(ee.Filter.eq('resolution_meters', 10)).select('VH')
 
-        if output_file_name != None or output_file_name != '':
+        if output_file_name != None and output_file_name != '':
             try:
                 geemap.ee_export_image(sentinel1.mean(), filename=output_file_name+'.tif', region=region_of_interest, scale=scale)
             except Exception as e:
@@ -76,22 +81,27 @@ class RoadFloodRiskMap(geemap.Map):
         Returns:
             image: The results of the hydrological analysis.
         """
+        # Retrieve DEM data
+        dem = self.wbe.read_raster(input_dem_file)
         # Smooth the DEM(Optional depending on the input DEM quality)
-        wbt.feature_preserving_smooth(input_dem_file, output_file_name+'_smoothed.tif', filter_size=3)
+        dem = self.wbe.feature_preserving_smoothing(dem, filter_size=9)
 
         # Generate Hillshade from DEM
-        wbt.hillshade(input_dem_file, output_file_name+'_hillshade.tif', azimuth=315, altitude=45)
+        hillshade = self.wbe.multidirectional_hillshade(dem)
 
         # Fill depressions
-        wbt.fill_depressions(input_dem_file, output_file_name+'_filled.tif')
+        #wbt.fill_depressions(input_dem_file, output_file_name+'_filled.tif')
         # or Breach depression
-        wbt.breach_depressions(input_dem_file, output_file_name+'_breached.tif')
+        dem_filled = self.wbe.breach_depressions_least_cost(dem)
+        dem_filled = self.wbe.fill_depressions(dem_filled)
 
         # Delineate flow direction
-        wbt.d8_pointer(input_dem_file, output_file_name+'_flow_direction.tif')
+        d8_dem = self.wbe.d8_pointer(dem_filled)
 
         # Calculate flow accumulation
-        wbt.d8_flow_accumulation(output_file_name+'_flow_direction.tif', output_file_name+'_flow_accumulation.tif')
+        flow_accum = self.wbe.d8_flow_accum(dem_filled)
+
+        return d8_dem, flow_accum
 
     def get_risk_level(self, location):
         """
