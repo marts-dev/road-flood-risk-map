@@ -83,25 +83,16 @@ class RoadFloodRiskMap(geemap.Map):
         """
         # Retrieve DEM data
         dem = self.wbe.read_raster(input_dem_file)
-        # Smooth the DEM(Optional depending on the input DEM quality)
-        dem = self.wbe.feature_preserving_smoothing(dem, filter_size=9)
 
-        # Generate Hillshade from DEM
-        hillshade = self.wbe.multidirectional_hillshade(dem)
+        # Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, and a flow accumulation raster.
 
-        # Fill depressions
-        #wbt.fill_depressions(input_dem_file, output_file_name+'_filled.tif')
-        # or Breach depression
-        dem_filled = self.wbe.breach_depressions_least_cost(dem)
-        dem_filled = self.wbe.fill_depressions(dem_filled)
+        filled, d8_ptr, flow_accum = self.wbe.flow_accum_full_workflow(
+            dem=dem,
+            out_type="sca",
+            log_transform=True,
+        )
 
-        # Delineate flow direction
-        d8_dem = self.wbe.d8_pointer(dem_filled)
-
-        # Calculate flow accumulation
-        flow_accum = self.wbe.d8_flow_accum(dem_filled)
-
-        return d8_dem, flow_accum
+        return filled, d8_ptr, flow_accum
 
     def get_risk_level(self, location):
         """
