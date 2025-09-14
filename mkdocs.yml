@@ -49,8 +49,8 @@ plugins:
           ignore_h1_titles: True
           execute: True
           allow_errors: false
-          ignore: ["conf.py", "examples/introduction.ipynb"]
-          execute_ignore: ["*ignore.ipynb"]
+          ignore: ["conf.py"]
+          execute_ignore: ["*ignore.ipynb", "examples/introduction.ipynb"]
 
 markdown_extensions:
     - admonition
