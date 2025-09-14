@@ -28,4 +28,6 @@ jobs:
               run: |
                   python -m unittest discover tests/
             - run: mkdocs gh-deploy --force
+              env:
+                NBEXECUTE: "false"
 
