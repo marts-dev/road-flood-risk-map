@@ -8,3 +8,4 @@ localtileserver
 geemap
 earthengine-api
 whitebox-workflows
+ipywidgets

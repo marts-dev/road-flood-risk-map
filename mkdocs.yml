@@ -4,7 +4,7 @@ site_author: marts-dev
 site_url: https://marts-dev.github.io/road-flood-risk-map
 repo_url: https://github.com/marts-dev/road-flood-risk-map
 
-copyright: "Copyright &copy; 2024 - 2024 Martin Arrogante"
+copyright: "Copyright &copy; 2024 - 2025 Martin Arrogante"
 
 theme:
     palette:
@@ -80,7 +80,7 @@ nav:
     - Changelog: changelog.md
     - Report Issues: https://github.com/marts-dev/road-flood-risk-map/issues
     - Examples:
-        - examples/intro.ipynb
+        - examples/introduction.ipynb
     - API Reference:
           - road_flood_risk_map module: road_flood_risk_map.md
           - common module: common.md
