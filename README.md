@@ -14,4 +14,14 @@
 
 ## Features
 
--   TODO
+-   Perform D8 Flow Analysis and Flow Accumulation
+
+## Under Development
+
+-   Road map overlay with flow accumulation
+
+## Citation
+
+> Lindsay, J. B., & Whitebox Geospatial Inc. (2025). *whitebox_workflows* (Version 1.3.5) [Software]. Available at: https://pypi.org/project/whitebox-workflows/
+
+> Wu, Q. (2020). *geemap: A Python package for interactive mapping with Google Earth Engine*. Journal of Open Source Software, 5(51), 2305. https://doi.org/10.21105/joss.02305
